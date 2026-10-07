@@ -2,55 +2,178 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>GBC Cartridge Emulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GBC Player</title>
   <style>
+    * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
     body {
-      background-color: #1a1a1a;
+      background-color: #121212;
       color: #fff;
       font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: space-between;
+      touch-action: none;
+    }
+    #game-container {
+      width: 100%;
+      max-width: 400px;
+      height: 45vh;
+      display: flex;
+      align-items: center;
       justify-content: center;
-      margin: 0;
-      height: 100vh;
-      touch-action: manipulation;
+      background: #000;
+      position: relative;
     }
     canvas {
       image-rendering: pixelated;
-      background-color: #9bbc0f;
-      border: 4px solid #333;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-      width: 320px;
-      height: 288px;
+      max-width: 100%;
+      max-height: 100%;
     }
-    .controls {
-      margin-top: 20px;
+    #loading {
+      position: absolute;
+      color: #aaa;
+      font-size: 16px;
+    }
+    /* Controles virtuales para celular */
+    .touch-controls {
+      width: 100%;
+      max-width: 400px;
+      height: 50vh;
       display: flex;
-      gap: 15px;
+      flex-direction: column;
+      justify-content: space-around;
+      padding: 10px 20px;
     }
-    button, label {
-      background: #7c5295;
-      color: white;
-      padding: 10px 18px;
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 45px);
+      grid-template-rows: repeat(3, 45px);
+      gap: 3px;
+    }
+    .btn {
+      background: #333;
+      border: 2px solid #555;
       border-radius: 8px;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
+      color: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
     }
-    input[type="file"] { display: none; }
+    .btn:active { background: #666; }
+    .action-buttons {
+      display: flex;
+      gap: 20px;
+      transform: rotate(-15deg);
+    }
+    .action-btn {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: #8b0000;
+      border: 3px solid #b22222;
+      font-size: 18px;
+    }
+    .action-btn:active { background: #ff4500; }
+    .meta-controls {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+    .pill-btn {
+      width: 60px;
+      height: 20px;
+      background: #444;
+      border-radius: 10px;
+      font-size: 10px;
+      border: 1px solid #666;
+    }
   </style>
 </head>
 <body>
-  <h1>Game Boy Color</h1>
-  <canvas id="screen" width="160" height="144"></canvas>
 
-  <div class="controls">
-    <label for="rom-loader">Cargar ROM (.gb / .gbc)</label>
-    <input type="file" id="rom-loader" accept=".gb,.gbc">
+  <div id="game-container">
+    <div id="loading">Cargando cartucho...</div>
+    <canvas id="screen"></canvas>
   </div>
 
-  <script src="emulator.js"></script>
+  <div class="touch-controls">
+    <div class="top-controls">
+      <!-- Cruceta -->
+      <div class="dpad">
+        <div></div>
+        <div class="btn" data-key="ArrowUp">▲</div>
+        <div></div>
+        <div class="btn" data-key="ArrowLeft">◀</div>
+        <div></div>
+        <div class="btn" data-key="ArrowRight">▶</div>
+        <div></div>
+        <div class="btn" data-key="ArrowDown">▼</div>
+        <div></div>
+      </div>
+
+      <!-- Botones B y A -->
+      <div class="action-buttons">
+        <div class="btn action-btn" data-key="KeyZ">B</div>
+        <div class="btn action-btn" data-key="KeyX">A</div>
+      </div>
+    </div>
+
+    <!-- Select / Start -->
+    <div class="meta-controls">
+      <div class="btn pill-btn" data-key="ShiftRight">SELECT</div>
+      <div class="btn pill-btn" data-key="Enter">START</div>
+    </div>
+  </div>
+
+  <!-- Motor RetroArch compilado a WebAssembly -->
+  <script src="https://unpkg.com/nostalgist/dist/nostalgist.umd.js [unpkg.com]"></script>
+  <script>
+    async function startGame() {
+      try {
+        await Nostalgist.gbc({
+          // Ruta directa al archivo subido en el repositorio
+          rom: 'jpokeazul.gb',
+          element: document.getElementById('screen')
+        });
+        document.getElementById('loading').style.display = 'none';
+      } catch (err) {
+        document.getElementById('loading').innerText = 'Error al cargar juego.gbc';
+        console.error(err);
+      }
+    }
+
+    // Mapeo táctil para simular eventos de teclado
+    function sendKey(code, type) {
+      window.dispatchEvent(new KeyboardEvent(type, { code: code, bubbles: true }));
+    }
+
+    document.querySelectorAll('.btn').forEach(btn => {
+      const code = btn.dataset.key;
+      if (!code) return;
+
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        sendKey(code, 'keydown');
+      });
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        sendKey(code, 'keyup');
+      });
+    });
+
+    window.addEventListener('load', startGame);
+  </script>
 </body>
 </html>
+
