@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>GBC Cartridge Emulator</title>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      height: 100vh;
+      touch-action: manipulation;
+    }
+    canvas {
+      image-rendering: pixelated;
+      background-color: #9bbc0f;
+      border: 4px solid #333;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      width: 320px;
+      height: 288px;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 15px;
+    }
+    button, label {
+      background: #7c5295;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Game Boy Color</h1>
+  <canvas id="screen" width="160" height="144"></canvas>
+
+  <div class="controls">
+    <label for="rom-loader">Cargar ROM (.gb / .gbc)</label>
+    <input type="file" id="rom-loader" accept=".gb,.gbc">
+  </div>
+
+  <script src="emulator.js"></script>
+</body>
+</html>
